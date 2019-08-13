@@ -1,0 +1,166 @@
+%{
+
+#include <iostream>
+#include <string>
+#include <cstdlib>
+#include <vector>
+#include "ast.hpp"
+  using namespace std;
+
+  void yyerror(string s) {
+    cerr << s << endl;
+    exit(EXIT_FAILURE);
+  }
+
+  extern int yylex();
+
+  int br_fje = 0;
+
+%}
+
+%union {
+  double d;
+  string *s;
+  ExprAST *e;
+  vector<ExprAST*> *v;
+  vector<string> *v1;
+  PrototypeAST *p;
+}
+
+%type <e> E
+%type <v1> Args
+%type <v> NizArg NizArg1
+
+%token if_token then_token else_token eq_token ow_token 
+%token <s> id_token
+%token <d> num_token
+
+%nonassoc else_token
+%right '='
+%left '<' '>' eq_token
+%left '+' '-'
+%left '*' '/'
+
+%%
+Program: Program ';' Naredba {
+  
+ }
+| Naredba {
+  
+ }
+;
+
+Naredba: E {
+  FunctionAST *f = new FunctionAST(new PrototypeAST("anonimna_fja_" + to_string(br_fje++), vector<string>()), $1);
+  f->codegen();
+  delete f;
+ }
+| id_token Args '=' E {
+  FunctionAST *f = new FunctionAST(new PrototypeAST(*$1, *$2), $4);
+  f->codegen();
+  delete $1;
+  delete f;
+
+// id_token Args '|' E '=' E '|' ow_token '=' E
+
+}
+;
+
+E: E '+' E {
+  $$ = new AddExprAST($1, $3);
+ }
+| E '-' E {
+  $$ = new SubExprAST($1, $3);
+ }
+| E '*' E {
+  $$ = new MulExprAST($1, $3);
+ }
+| E '/' E {
+  $$ = new DivExprAST($1, $3);
+ }
+| E '<' E {
+  $$ = new LtExprAST($1, $3);
+ }
+| E '>' E {
+  $$ = new GtExprAST($1, $3);
+ }
+| E eq_token E {
+  $$ = new EqExprAST($1, $3);
+ }
+| '(' E ')' {
+  $$ = $2;
+ }
+| id_token {
+  $$ = new VariableExprAST(*$1);
+  delete $1;
+ }
+| id_token NizArg {
+  $$ = new CallExprAST(*$1, *$2);
+  delete $1;
+  delete $2;
+ }
+| num_token {
+  $$ = new NumberExprAST($1);
+ }
+| if_token E then_token E else_token E {
+  $$ = new IfExprAST($2, $4, $6);
+ }
+| id_token '=' E {
+  $$ = new AssignExprAST(*$1, $3);
+  delete $1;
+  }
+;
+
+Args: Args id_token {
+  $$ = $1;
+  $$->push_back(*$2);
+  delete $2;
+ }
+| {
+  $$ = new vector<string>();
+ }
+;
+
+NizArg: NizArg1 {
+  $$ = $1; 
+ }
+| {
+  $$ = new vector<ExprAST*>();
+ }
+;
+
+NizArg1: NizArg1 E {
+  $$ = $1;
+  $$->push_back($3);
+ }
+| E {
+  $$ = new vector<ExprAST*>();
+  $$->push_back($1);
+ }
+;
+
+%%
+
+extern Module* TheModule;
+extern LLVMContext TheContext;
+extern legacy::FunctionPassManager* TheFPM;
+
+int main() {
+  TheModule = new Module("My module", TheContext);
+  TheFPM = new legacy::FunctionPassManager(TheModule);
+
+  TheFPM->add(createInstructionCombiningPass());
+  TheFPM->add(createReassociatePass());
+  TheFPM->add(createNewGVNPass());
+  TheFPM->add(createCFGSimplificationPass());
+
+  TheFPM->doInitialization();
+  
+  yyparse();
+  TheModule->print(outs(), nullptr);
+  delete TheModule;
+  delete TheFPM;
+  
+  return 0;
+}
+
