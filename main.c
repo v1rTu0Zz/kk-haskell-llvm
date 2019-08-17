@@ -1,14 +1,9 @@
 #include<stdio.h>
 
-//extern double greater(double x, double y);
-extern double lesser(double x, double y);
-extern double fibonacci(double x);
+extern double anonimna_fja_0();
 
 int main() {
-	//printf("%lf \n", greater(2,3));
-	printf("%lf \n", lesser(2,3));
-	
-	//printf(fibonacci(5));
+	printf("%lf \n", anonimna_fja_0());
 
 	return 0;
 }

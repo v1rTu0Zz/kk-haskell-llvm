@@ -17,5 +17,5 @@ ast.o: ast.cpp ast.hpp
 .PHONY: clean
 
 clean:
-	rm -f *~ *tab* lex.yy.c haskell_to_llvm *.o
+	rm -f *~ *tab* lex.yy.c haskell_to_llvm *.o main
 

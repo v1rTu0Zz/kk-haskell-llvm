@@ -28,5 +28,7 @@
 
 # Executables
 *.exe
+*.ll
+*.s
 *.out
 *.app

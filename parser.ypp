@@ -25,13 +25,17 @@
   vector<ExprAST*> *v;
   vector<string> *v1;
   PrototypeAST *p;
+  FunctionAST *f;
+  vector<FunctionAST*> *vf;
 }
 
 %type <e> E
-%type <v1> Args
+%type <v1> Args Args1
 %type <v> NizArg NizArg1
+%type <f> Funkcija
+%type <vf> NizFja
 
-%token if_token then_token else_token eq_token ow_token 
+%token if_token then_token else_token eq_token ow_token let_token in_token
 %token <s> id_token
 %token <d> num_token
 
@@ -42,26 +46,31 @@
 %left '*' '/'
 
 %%
-Program: Program ';' Naredba {
-  
- }
-| Naredba {
-  
- }
-;
 
-Naredba: E {
-  FunctionAST *f = new FunctionAST(new PrototypeAST("anonimna_fja_" + to_string(br_fje++), vector<string>()), $1);
+Naredba: let_token NizFja in_token E {
+
+  for(auto fja:*$2) {
+  	fja->codegen();
+  }
+
+
+  FunctionAST *fa = new FunctionAST(
+						new PrototypeAST("anonimna_fja_"+to_string(br_fje++),
+							vector<string>()), $4);
+  fa->codegen();
+
+  delete $2;
+  delete fa;
+}
+| E {
+  FunctionAST *f = new FunctionAST(
+						new PrototypeAST("anonimna_fja_"+to_string(br_fje++),
+							vector<string>()), $1
+					);
   f->codegen();
   delete f;
- }
-| id_token Args '=' E {
-  FunctionAST *f = new FunctionAST(new PrototypeAST(*$1, *$2), $4);
-  f->codegen();
-  delete $1;
-  delete f;
-
-// id_token Args '|' E '=' E '|' ow_token '=' E
+}
+| {
 
 }
 ;
@@ -90,48 +99,47 @@ E: E '+' E {
 | '(' E ')' {
   $$ = $2;
  }
-| id_token {
-  $$ = new VariableExprAST(*$1);
-  delete $1;
- }
-| id_token NizArg {
-  $$ = new CallExprAST(*$1, *$2);
-  delete $1;
-  delete $2;
- }
 | num_token {
   $$ = new NumberExprAST($1);
  }
 | if_token E then_token E else_token E {
   $$ = new IfExprAST($2, $4, $6);
  }
-| id_token '=' E {
-  $$ = new AssignExprAST(*$1, $3);
+| id_token '(' NizArg ')' {
+  $$ = new CallExprAST(*$1,*$3);
   delete $1;
-  }
+}
+| id_token {
+  $$ = new VariableExprAST(*$1);
+  delete $1;
+}
 ;
 
-Args: Args id_token {
+NizFja: NizFja Funkcija {
   $$ = $1;
-  $$->push_back(*$2);
-  delete $2;
- }
-| {
-  $$ = new vector<string>();
- }
-;
+  $$->push_back($2);
+}
+| Funkcija {
+  $$ = new vector<FunctionAST*>();
+  $$->push_back($1);
+}
+
+Funkcija: id_token '(' Args ')' '=' E {
+  $$ = new FunctionAST(new PrototypeAST(*$1, *$3), $6);
+  delete $1;
+  delete $3;
+}
 
 NizArg: NizArg1 {
-  $$ = $1; 
- }
+  $$ = $1;
+}
 | {
   $$ = new vector<ExprAST*>();
- }
-;
+}
 
-NizArg1: NizArg1 E {
-  $$ = $1;
-  $$->push_back($3);
+NizArg1: E ',' NizArg1 {
+  $$ = $3;
+  $$->push_back($1);
  }
 | E {
   $$ = new vector<ExprAST*>();
@@ -139,6 +147,21 @@ NizArg1: NizArg1 E {
  }
 ;
 
+Args: Args1 {
+  $$ = $1;	
+}
+| {
+  $$ = new vector<string>();
+}
+
+Args1: id_token ',' Args1 {
+	$$ = $3;
+	$$->push_back(*$1);
+} | id_token {
+	$$ = new vector<string>();
+	$$->push_back(*$1);
+}
+;
 %%
 
 extern Module* TheModule;

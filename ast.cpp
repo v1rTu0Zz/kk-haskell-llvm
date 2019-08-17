@@ -108,7 +108,7 @@ Value* EqExprAST::codegen() const {
 Value* CallExprAST::codegen() const {
   Function* CalleeF = TheModule->getFunction(Callee);
   if (CalleeF == nullptr)
-    yyerror("Function " + Callee + " ne postoji");
+    yyerror("Funkcija " + Callee + " ne postoji");
 
   unsigned arg_size = CalleeF->arg_size();
   if (arg_size != Vec.size())

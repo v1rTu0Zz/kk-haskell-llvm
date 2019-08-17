@@ -17,6 +17,8 @@
 "if"                     return if_token;
 "then"                   return then_token;
 "else"                   return else_token;
+"let"                	 return let_token;
+"in"                	 return in_token;
 "otherwise"              return ow_token;
 "=="              		 return eq_token;
 [a-zA-Z_][a-zA-Z_0-9]*   {
