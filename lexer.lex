@@ -17,6 +17,7 @@
 "if"                     return if_token;
 "then"                   return then_token;
 "else"                   return else_token;
+"where"                  return where_token;
 "let"                	 return let_token;
 "in"                	 return in_token;
 "otherwise"              return ow_token;

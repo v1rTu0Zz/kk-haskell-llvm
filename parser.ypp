@@ -35,7 +35,7 @@
 %type <f> Funkcija
 %type <vf> NizFja
 
-%token if_token then_token else_token eq_token ow_token let_token in_token
+%token if_token then_token else_token eq_token ow_token let_token in_token where_token
 %token <s> id_token
 %token <d> num_token
 
@@ -62,7 +62,22 @@ Naredba: let_token NizFja in_token E {
   delete $2;
   delete fa;
 }
-| E {
+| E where_token NizFja {
+
+  for(auto fja:*$3) {
+  	fja->codegen();
+  }
+
+
+  FunctionAST *fa = new FunctionAST(
+						new PrototypeAST("anonimna_fja_"+to_string(br_fje++),
+							vector<string>()), $1);
+  fa->codegen();
+
+  delete $3;
+  delete fa;
+}
+|E {
   FunctionAST *f = new FunctionAST(
 						new PrototypeAST("anonimna_fja_"+to_string(br_fje++),
 							vector<string>()), $1
