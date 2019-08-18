@@ -109,6 +109,13 @@ Value* EqExprAST::codegen() const {
   return Builder.CreateUIToFP(tmp, Type::getDoubleTy(TheContext), "booltmp");
 }
 
+Value* NonExaustivePatternsErrorExprAST::codegen() const {
+  //TODO: find a way to print the error in runtime instead of returning 0
+  // error: "Non-exhaustive patterns in function "+Callee
+  return ConstantFP::get(TheContext, APFloat(0.0));
+;
+}
+
 Value* CallExprAST::codegen() const {
   Function* CalleeF = TheModule->getFunction(Callee);
   if (CalleeF == nullptr)

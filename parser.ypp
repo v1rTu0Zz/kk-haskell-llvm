@@ -15,6 +15,8 @@
   extern int yylex();
 
   int br_fje = 0;
+  vector<tuple<int, int>> *arg_numbers_vect;
+  int arg_no = 0;
 
 %}
 
@@ -178,17 +180,65 @@ NizFja: NizFja Funkcija {
 ;
 
 Funkcija: id_token '(' Args ')' '=' E {
-  $$ = new FunctionAST(new PrototypeAST(*$1, *$3), $6);
+  if(arg_no==0)
+  	$$ = new FunctionAST(new PrototypeAST(*$1, *$3), $6);
+  else {
+	auto curr_body = $6;
+	for(auto& tuple: *arg_numbers_vect) {
+		int arg_no, arg_val;
+		tie(arg_no, arg_val) = tuple;
+
+		auto var = new VariableExprAST("var_no_"+to_string(arg_no));
+		auto eq_e = new EqExprAST(var, new NumberExprAST(arg_val));
+		auto err_e = new NonExaustivePatternsErrorExprAST(*$1);
+		curr_body = new IfExprAST(eq_e, curr_body,  err_e);
+	}
+	delete arg_numbers_vect;
+  	$$ = new FunctionAST(new PrototypeAST(*$1, *$3), curr_body);
+  }
+  //TODO: check if function already exists and add second definiton instead of 
+  // else branch with error expr, of course change argument name to newly given one.
+  // Also consider refactoring this logic to FunctionAST constgructor
   delete $1;
   delete $3;
 }
 | id_token '=' '\\' '(' Args ')' '-' '>' E {
-  $$ = new FunctionAST(new PrototypeAST(*$1, *$5), $9);
+  if(arg_no==0)
+  	$$ = new FunctionAST(new PrototypeAST(*$1, *$5), $9);
+  else {
+	auto curr_body = $9;
+	for(auto& tuple: *arg_numbers_vect) {
+		int arg_no, arg_val;
+		tie(arg_no, arg_val) = tuple;
+
+		auto var = new VariableExprAST("var_no_"+to_string(arg_no));
+		auto eq_e = new EqExprAST(var, new NumberExprAST(arg_val));
+		auto err_e = new NonExaustivePatternsErrorExprAST(*$1);
+		curr_body = new IfExprAST(eq_e, curr_body,  err_e);
+	}
+	delete arg_numbers_vect;
+  	$$ = new FunctionAST(new PrototypeAST(*$1, *$5), curr_body);
+  }
   delete $1;
   delete $5;
 }
 | id_token '(' Args ')' NizUslova {
-  $$ = new FunctionAST(new PrototypeAST(*$1, *$3), $5);
+  if(arg_no==0)
+  	$$ = new FunctionAST(new PrototypeAST(*$1, *$3), $5);
+  else {
+	auto curr_body = $5;
+	for(auto& tuple: *arg_numbers_vect) {
+		int arg_no, arg_val;
+		tie(arg_no, arg_val) = tuple;
+
+		auto var = new VariableExprAST("var_no_"+to_string(arg_no));
+		auto eq_e = new EqExprAST(var, new NumberExprAST(arg_val));
+		auto err_e = new NonExaustivePatternsErrorExprAST(*$1);
+		curr_body = new IfExprAST(eq_e, curr_body,  err_e);
+	}
+	delete arg_numbers_vect;
+  	$$ = new FunctionAST(new PrototypeAST(*$1, *$3), curr_body);
+  }
   delete $1;
   delete $3;
 }
@@ -231,10 +281,27 @@ Args: Args1 {
 Args1: id_token ',' Args1 {
 	$$ = $3;
 	$$->push_back(*$1);
+	arg_no++;
+	delete $1;
 } | id_token {
+	arg_no = 1;
 	$$ = new vector<string>();
 	$$->push_back(*$1);
+	delete $1;
+} | num_token ',' Args1 {
+	$$ = $3;
+	arg_numbers_vect->push_back(make_tuple(arg_no, $1));
+
+	$$->push_back("var_no_"+to_string(arg_no++));
+} | num_token {
+	arg_no = 0;
+	arg_numbers_vect = new vector<tuple<int, int>>();
+	arg_numbers_vect->push_back(make_tuple(arg_no, $1));
+
+	$$ = new vector<string>();
+	$$->push_back("var_no_"+to_string(arg_no++));
 }
+
 ;
 %%
 

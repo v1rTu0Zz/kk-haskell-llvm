@@ -136,6 +136,16 @@ private:
   string Callee;
 };
 
+class NonExaustivePatternsErrorExprAST : public ExprAST {
+public:
+  NonExaustivePatternsErrorExprAST(string c)
+	  :Callee(c)
+  { }
+  Value* codegen() const;
+private:
+  string Callee;
+};
+
 class IfExprAST : public InnerExprAST {
 public:
   IfExprAST(ExprAST* cond, ExprAST *e1, ExprAST *e2)
