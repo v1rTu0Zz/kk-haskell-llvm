@@ -11,3 +11,7 @@ Syntax supported:
   functions
   
   let in (for functions)
+  
+  where (for functions)
+  
+  function guards
