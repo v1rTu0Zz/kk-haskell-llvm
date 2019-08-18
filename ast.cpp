@@ -12,6 +12,10 @@ Value* NumberExprAST::codegen() const {
   return ConstantFP::get(TheContext, APFloat(Val));
 }
 
+Value* StringExprAST::codegen() const {
+  return Builder.CreateGlobalStringPtr(StringRef(Val));
+}
+
 Value* VariableExprAST::codegen() const {
   AllocaInst* tmp = NamedValues[Name];
   if (tmp == nullptr)

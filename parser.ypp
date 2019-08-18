@@ -29,14 +29,16 @@
   vector<FunctionAST*> *vf;
 }
 
-%type <e> E
+%type <e> E NizUslova
 %type <v1> Args Args1
 %type <v> NizArg NizArg1
 %type <f> Funkcija
 %type <vf> NizFja
 
-%token if_token then_token else_token eq_token ow_token let_token in_token where_token
+%token if_token then_token else_token eq_token ow_token 
+		let_token in_token where_token case_token of_token
 %token <s> id_token
+%token <s> string_token
 %token <d> num_token
 
 %nonassoc else_token
@@ -62,6 +64,23 @@ Naredba: let_token NizFja in_token E {
   delete $2;
   delete fa;
 }
+/*| NizFja E {
+//TODO: fix conflicts if possible
+  for(auto fja:*$1) {
+  	fja->codegen();
+  }
+
+
+  FunctionAST *fa = new FunctionAST(
+						new PrototypeAST("anonimna_fja_"+to_string(br_fje++),
+							vector<string>()), $2);
+  fa->codegen();
+
+  delete $1;
+  delete fa;
+}
+*/
+
 | E where_token NizFja {
 
   for(auto fja:*$3) {
@@ -77,7 +96,7 @@ Naredba: let_token NizFja in_token E {
   delete $3;
   delete fa;
 }
-|E {
+| E {
   FunctionAST *f = new FunctionAST(
 						new PrototypeAST("anonimna_fja_"+to_string(br_fje++),
 							vector<string>()), $1
@@ -117,18 +136,36 @@ E: E '+' E {
 | num_token {
   $$ = new NumberExprAST($1);
  }
+| string_token {
+  $$ = new StringExprAST(*$1);
+  delete $1;
+}
 | if_token E then_token E else_token E {
   $$ = new IfExprAST($2, $4, $6);
  }
-| id_token '(' NizArg ')' {
-  $$ = new CallExprAST(*$1,*$3);
-  delete $1;
-}
 | id_token {
   $$ = new VariableExprAST(*$1);
   delete $1;
 }
+/*| case_token E of_token NizMogucnosti { 
+	// TODO: create nested if that check equality
+ }
+*/
+| id_token '(' NizArg ')' {
+  $$ = new CallExprAST(*$1,*$3);
+  delete $1;
+}
 ;
+
+/* NizMogucnosti: E '-''>' E NizMogucnosti {
+// TODO: solve conflicts if possible
+			 
+}
+| E '-''>' E {
+
+}
+;
+*/
 
 NizFja: NizFja Funkcija {
   $$ = $1;
@@ -138,12 +175,32 @@ NizFja: NizFja Funkcija {
   $$ = new vector<FunctionAST*>();
   $$->push_back($1);
 }
+;
 
 Funkcija: id_token '(' Args ')' '=' E {
   $$ = new FunctionAST(new PrototypeAST(*$1, *$3), $6);
   delete $1;
   delete $3;
 }
+| id_token '=' '\\' '(' Args ')' '-' '>' E {
+  $$ = new FunctionAST(new PrototypeAST(*$1, *$5), $9);
+  delete $1;
+  delete $5;
+}
+| id_token '(' Args ')' NizUslova {
+  $$ = new FunctionAST(new PrototypeAST(*$1, *$3), $5);
+  delete $1;
+  delete $3;
+}
+;
+
+NizUslova: '|' E '=' E NizUslova {
+  $$ = new IfExprAST($2, $4, $5);
+}
+| '|' E '=' E '|' ow_token '=' E {
+  $$ = new IfExprAST($2, $4, $8);
+}
+; 
 
 NizArg: NizArg1 {
   $$ = $1;
@@ -151,6 +208,7 @@ NizArg: NizArg1 {
 | {
   $$ = new vector<ExprAST*>();
 }
+;
 
 NizArg1: E ',' NizArg1 {
   $$ = $3;
@@ -168,6 +226,7 @@ Args: Args1 {
 | {
   $$ = new vector<string>();
 }
+;
 
 Args1: id_token ',' Args1 {
 	$$ = $3;

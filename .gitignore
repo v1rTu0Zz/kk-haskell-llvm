@@ -32,3 +32,9 @@
 *.s
 *.out
 *.app
+
+# Other
+*~
+*.swp
+*.tab.*
+*.yy.*

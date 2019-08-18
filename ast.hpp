@@ -33,6 +33,16 @@ private:
   double Val;
 };
 
+class StringExprAST : public ExprAST {
+public:
+  StringExprAST(string v)
+    :Val(v)
+  {}
+  Value* codegen() const;
+private:
+  string Val;
+};
+
 class VariableExprAST : public ExprAST {
 public:
   VariableExprAST(const string &n)
