@@ -15,3 +15,5 @@ Syntax supported:
   where (for functions)
   
   function guards
+
+  pattern matching with constans (only one function definition allowed for now)
