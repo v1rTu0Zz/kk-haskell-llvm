@@ -1,1 +1,0 @@
-./haskell_to_llvm < $1 > $1.ll && clang -S $1.ll && clang -o main main.c $1.s -lm && ./main

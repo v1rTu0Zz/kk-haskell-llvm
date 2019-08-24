@@ -34,7 +34,7 @@
   yylval.s = new string(yytext);
   return id_token;
 }
-[<>(),;+*/=-\[\]|]           return *yytext;
+[\\<>(),;+*/=-\[\]|-]           return *yytext;
 [0-9]+(\.[0-9]*)?        {
   yylval.d = atof(yytext);
   return num_token;
