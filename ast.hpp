@@ -7,7 +7,7 @@
 #include "llvm/IR/Verifier.h"
 #include "llvm/IR/LegacyPassManager.h"
 #include "llvm/Transforms/Scalar.h"
-//#include "llvm/IR/CallingConv.h"
+#include "llvm/IR/GlobalVariable.h"
 
 using namespace llvm;
 using namespace llvm::legacy;
@@ -32,16 +32,6 @@ public:
   Value* codegen() const;
 private:
   double Val;
-};
-
-class StringExprAST : public ExprAST {
-public:
-  StringExprAST(string v)
-    :Val(v)
-  {}
-  Value* codegen() const;
-private:
-  string Val;
 };
 
 class VariableExprAST : public ExprAST {
@@ -137,16 +127,6 @@ private:
   string Callee;
 };
 
-class NonExaustivePatternsErrorExprAST : public ExprAST {
-public:
-  NonExaustivePatternsErrorExprAST(string c)
-	  :Callee(c)
-  { }
-  Value* codegen() const;
-private:
-  string Callee;
-};
-
 class IfExprAST : public InnerExprAST {
 public:
   IfExprAST(ExprAST* cond, ExprAST *e1, ExprAST *e2)
@@ -171,16 +151,6 @@ public:
     :InnerExprAST(e1, e2)
   {}
   Value* codegen() const;
-};
-
-class AssignExprAST : public InnerExprAST {
-public:
-  AssignExprAST(string s, ExprAST* e)
-    :InnerExprAST(e), VarName(s)
-  {}
-  Value* codegen() const;
-private:
-  string VarName;
 };
 
 class PrototypeAST {

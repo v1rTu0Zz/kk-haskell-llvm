@@ -1,4 +1,6 @@
 CPPFLAGS=$(shell llvm-config-6.0 --cxxflags)
+CPPFLAGS+= -Wno-unknown-warning-option -Wno-override-module
+CPPFLAGS+= -Wno-unused-command-line-argument -std=c++17
 LDFLAGS=$(shell llvm-config-6.0 --ldflags --libs)
 
 haskell_to_llvm: lex.yy.o parser.o ast.o

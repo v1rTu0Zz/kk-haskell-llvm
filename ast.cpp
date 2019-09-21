@@ -12,14 +12,17 @@ Value* NumberExprAST::codegen() const {
   return ConstantFP::get(TheContext, APFloat(Val));
 }
 
-Value* StringExprAST::codegen() const {
-  return Builder.CreateGlobalStringPtr(StringRef(Val));
-}
-
 Value* VariableExprAST::codegen() const {
   AllocaInst* tmp = NamedValues[Name];
-  if (tmp == nullptr)
-    yyerror("Promenljiva " + Name + " ne postoji");
+  if (tmp == nullptr) {
+	//TODO: try calling a function with this name
+	auto call = new CallExprAST(Name, vector<ExprAST*>());
+	Value* retVal = call->codegen();
+  	if(retVal == nullptr)
+	    yyerror("Promenljiva " + Name + " ne postoji");
+	
+	return retVal;
+  }
   return Builder.CreateLoad(tmp, Name);
 }
 
@@ -109,13 +112,6 @@ Value* EqExprAST::codegen() const {
   return Builder.CreateUIToFP(tmp, Type::getDoubleTy(TheContext), "booltmp");
 }
 
-Value* NonExaustivePatternsErrorExprAST::codegen() const {
-  //TODO: find a way to print the error in runtime instead of returning 0
-  // error: "Non-exhaustive patterns in function "+Callee
-  return ConstantFP::get(TheContext, APFloat(0.0));
-;
-}
-
 Value* CallExprAST::codegen() const {
   Function* CalleeF = TheModule->getFunction(Callee);
   if (CalleeF == nullptr)
@@ -133,6 +129,8 @@ Value* CallExprAST::codegen() const {
       return nullptr;
     args.push_back(tmp);
   }
+
+  //CallingConv::ID conv = CallingConv::GHC;
 
   return Builder.CreateCall(CalleeF, args, "calltmp");
 }
@@ -235,10 +233,6 @@ Value* CExprAST::codegen() const {
   return r;  
 }
 
-Value* AssignExprAST::codegen() const {
-  return nullptr;
-}
-
 Function* PrototypeAST::codegen() const {
   vector<Type*> doubles(Args.size(), Type::getDoubleTy(TheContext));
   FunctionType* FT = FunctionType::get(Type::getDoubleTy(TheContext), doubles, false);
@@ -261,6 +255,8 @@ Function* FunctionAST::codegen() const {
   Function* TheFunction = TheModule->getFunction(Proto->getName());
   if (TheFunction == nullptr)
     TheFunction = Proto->codegen();
+
+  //CallingConv::ID conv = CallingConv::GHC;
 
   if (TheFunction == nullptr)
     return nullptr;

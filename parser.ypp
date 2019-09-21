@@ -25,14 +25,14 @@
   vector<string> *v1;
   PrototypeAST *p;
   FunctionAST *f;
-  vector<FunctionAST*> *vf;
+  vector< FunctionAST*> *vf;
 }
 
 %type <e> E NizUslova
 %type <v1> Args Args1
 %type <v> NizArg NizArg1
-%type <f> Funkcija
-%type <vf> NizFja
+%type <f> Funkcija Dodela
+%type <vf> NizFjaDodela
 
 %token if_token then_token else_token eq_token ow_token 
 		let_token in_token where_token case_token of_token
@@ -48,12 +48,11 @@
 
 %%
 
-Naredba: let_token NizFja in_token E {
+Naredba: let_token NizFjaDodela in_token E {
 
-  for(auto fja:*$2) {
-  	fja->codegen();
+  for(auto var:*$2) {
+	var->codegen();
   }
-
 
   FunctionAST *fa = new FunctionAST(
 						new PrototypeAST("anonimna_fja_"+to_string(br_fje++),
@@ -80,12 +79,11 @@ Naredba: let_token NizFja in_token E {
 }
 */
 
-| E where_token NizFja {
+| E where_token NizFjaDodela {
 
-  for(auto fja:*$3) {
-  	fja->codegen();
+  for(auto var:*$3) {
+	var->codegen();
   }
-
 
   FunctionAST *fa = new FunctionAST(
 						new PrototypeAST("anonimna_fja_"+to_string(br_fje++),
@@ -135,10 +133,6 @@ E: E '+' E {
 | num_token {
   $$ = new NumberExprAST($1);
  }
-| string_token {
-  $$ = new StringExprAST(*$1);
-  delete $1;
-}
 | if_token E then_token E else_token E {
   $$ = new IfExprAST($2, $4, $6);
  }
@@ -166,11 +160,19 @@ E: E '+' E {
 ;
 */
 
-NizFja: NizFja Funkcija {
+NizFjaDodela: NizFjaDodela Funkcija {
+  $$ = $1;
+  $$->push_back($2);
+}
+| NizFjaDodela Dodela {
   $$ = $1;
   $$->push_back($2);
 }
 | Funkcija {
+  $$ = new vector<FunctionAST*>();
+  $$->push_back($1);
+}
+| Dodela {
   $$ = new vector<FunctionAST*>();
   $$->push_back($1);
 }
@@ -190,6 +192,12 @@ Funkcija: id_token '(' Args ')' '=' E {
   $$ = new FunctionAST(new PrototypeAST(*$1, *$3), $5);
   delete $1;
   delete $3;
+}
+;
+
+Dodela: id_token '=' E {
+    $$ = new FunctionAST(new PrototypeAST(*$1, vector<string>()), $3);
+	delete $1;
 }
 ;
 

@@ -4,9 +4,9 @@
 %{
 #include <cstdlib>
 #include <iostream>
+#include <variant>
 
   using namespace std;
-#include <string>
 #include "ast.hpp"
 #include "parser.tab.hpp"
 
